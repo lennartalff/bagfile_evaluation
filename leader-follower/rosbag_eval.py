@@ -21,6 +21,12 @@ RxData = collections.namedtuple("RxFailData", [
     "drop_rate", "t_drop_rate"
 ])
 
+PathTarget = collections.namedtuple(
+    "PathTarget",
+    ["current_position", "target_position", "target_index", "time"])
+
+RFRate = collections.namedtuple("RFRate", ["rate", "time"])
+
 
 class Evaluator(object):
     def __init__(self, bagfile: rosbag.Bag):
@@ -45,6 +51,17 @@ class Evaluator(object):
             t[i] = ros_time.to_sec() - t0
         return PoseData(position=p, orientation=q, time=t)
 
+    def extract_rf_rate(self, topic, t0=None):
+        t0 = self.t0 if t0 is None else t0
+        msg_list = [x for x in self.bagfile.read_messages(topics=topic)]
+        n = len(msg_list)
+        rate = numpy.zeros([n], float)
+        time = numpy.zeros([n], float)
+        for i, (_, msg, ros_time) in enumerate(msg_list):
+            rate[i] = msg.data
+            time[i] = ros_time.to_sec() - t0
+        return RFRate(rate=rate, time=time)
+
     def extract_rxdata(self, topic, t0=None):
         if t0 is None:
             t0 = self.t0
@@ -67,7 +84,7 @@ class Evaluator(object):
             else:
                 append_counter(received)
                 t_received.append(t)
-            r = dropped[-1] / total[-1] if len(dropped) > 0 else 0
+            r = float(dropped[-1]) / total[-1] if len(dropped) > 0 else 0
             drop_rate.append(r)
             t_drop_rate.append(t)
         dropped = numpy.array(dropped)
@@ -96,7 +113,7 @@ class Evaluator(object):
         rssi_dbm = numpy.zeros([n], float)
         noise = numpy.zeros([n], int)
         noise_dbm = numpy.zeros([n], float)
-        t = []
+        t = numpy.zeros([n], float)
 
         for i, (_, msg, ros_time) in enumerate(msg_list):
             rssi[i] = msg.rssi
@@ -156,6 +173,27 @@ class Evaluator(object):
                                    path_index=path_index,
                                    time=t)
 
+    def extract_path_info(self, topic, t0=None):
+        if t0 is None:
+            t0 = self.t0
+        msg_list = [x for x in self.bagfile.read_messages(topics=topic)]
+        n = len(msg_list)
+        t = numpy.zeros([n], float)
+        current_position = numpy.zeros([n, 3], float)
+        target_position = numpy.zeros([n, 3], float)
+        target_index = numpy.zeros([n], int)
+        for i, (_, msg, ros_time) in enumerate(msg_list):
+            p = msg.current_position
+            current_position[i, :] = [p.x, p.y, p.z]
+            p = msg.target_position
+            target_position[i, :] = [p.x, p.y, p.z]
+            target_index[i] = msg.target_index
+            t[i] = ros_time.to_sec() - t0
+        return PathTarget(current_position=current_position,
+                          target_position=target_position,
+                          target_index=target_index,
+                          time=t)
+
 
 def moving_average_n(data, N):
     return numpy.convolve(data, numpy.ones((N, )) / N, mode="valid")
@@ -189,7 +227,7 @@ def crop_data(data, time, t0, t1):
     return data[a:b], time[a:b]
 
 
-def append_counter(a, inc=False):
+def append_counter(a, inc=True):
     if len(a) == 0:
         a.append(1)
     else:
