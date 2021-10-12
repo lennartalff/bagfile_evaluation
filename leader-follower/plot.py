@@ -1,14 +1,13 @@
 import rosbag
 import matplotlib.pyplot as plt
 import numpy
-import tf.transformations
-import collections
 import os
 import matplotlib
+import pandas as pd
 
 import rosbag_eval as be
 
-BASE_DIR = os.path.expanduser("~/uuv/catkin_ws/eval_bagfiles")
+BASE_DIR = os.path.expanduser("~/uuv/catkin_ws/bagfile_evaluation")
 SUB_DIR = "leader-follower/21-07-20"
 FILE_NAME = "21-07-20-path-follower-RF-P-gains.bag"
 BAGFILE = os.path.join(BASE_DIR, SUB_DIR, FILE_NAME)
@@ -28,7 +27,9 @@ def main():
 
     plt.plot(dcontrol.time, dcontrol.distance, label="Distanz")
     plt.plot(dcontrol.time, dcontrol.distance_setpoint, label="Zieldistanz")
-
+    d = numpy.array([dcontrol.time, dcontrol.distance, dcontrol.distance_setpoint], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Istwert", "Sollwert"])
+    out.to_csv("distance_setpoint.csv", sep=",")
     # Was sieht man? Die Regelgröße "Pfaddistanz" schwankt periodisch, abhängig
     # davon, wo sich das Fahrzeug auf der 8 befindet. -> 2 Mögliche Ursachen:
     # Fahrzeugdynamik abhängig von Kurvenfahrt (an den Extrema der x-Position
@@ -145,6 +146,9 @@ def main():
     plt.plot(t_thrust - t0, thrust, "k", label="ESC Signal")
     plt.ylabel("Normiertes ESC Eingangssignal")
     plt.legend()
+    d = numpy.array([t_path_dist, path_dist, dist_target, thrust], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Pfaddistanz", "Zieldistanz", "ESC"])
+    out.to_csv("control_switch_off.csv")
 
     plt.figure()
     plt.subplot(2, 2, 1)
