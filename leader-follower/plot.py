@@ -27,8 +27,11 @@ def main():
 
     plt.plot(dcontrol.time, dcontrol.distance, label="Distanz")
     plt.plot(dcontrol.time, dcontrol.distance_setpoint, label="Zieldistanz")
-    d = numpy.array([dcontrol.time, dcontrol.distance, dcontrol.distance_setpoint], dtype=float)
-    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Istwert", "Sollwert"])
+    d = numpy.array(
+        [dcontrol.time, dcontrol.distance, dcontrol.distance_setpoint],
+        dtype=float)
+    out = pd.DataFrame(numpy.transpose(d),
+                       columns=["Zeit", "Istwert", "Sollwert"])
     out.to_csv("distance_setpoint.csv", sep=",")
     # Was sieht man? Die Regelgröße "Pfaddistanz" schwankt periodisch, abhängig
     # davon, wo sich das Fahrzeug auf der 8 befindet. -> 2 Mögliche Ursachen:
@@ -47,12 +50,17 @@ def main():
     plt.plot(t - toffset, data, label="Pfadabstand A zu B", color=CMAP(0))
     plt.xlabel("Zeit [s]")
     plt.ylabel("Abstand [m]")
+    d = numpy.array([t, data], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Pfadabstand"])
+    out.to_csv("path_distance_fig2.csv", sep=",")
 
     data, t = be.crop_data(pose_follower.position[:, 0], pose_follower.time,
                            toffset, tend)
     plt.ylabel("$x$-Koordinate [m]")
     plt.plot(t - toffset, data, label="$x$-Koordinate", color=CMAP(1))
-
+    d = numpy.array([t, data], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "x"])
+    out.to_csv("x_coord_fig2.csv", sep=",")
     plt.legend()
     plt.xlim((0, tspan))
 
@@ -122,6 +130,15 @@ def main():
     plt.legend()
     plt.xlabel("$x$-Koordinate [m]")
     plt.ylabel("$y$-Koordinate [m]")
+    d = numpy.array([pos_leader[:, 0], pos_leader[:, 1]], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["x", "y"])
+    out.to_csv("xy_leader.csv")
+    d = numpy.array([pos_follower[:, 0], pos_follower[:, 1]], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["x", "y"])
+    out.to_csv("xy_follower.csv")
+    d = numpy.array([pos_target[:, 0], pos_target[:, 1]], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["x", "y"])
+    out.to_csv("xy_path.csv")
 
     plt.figure()
     t0 = 130
@@ -147,7 +164,8 @@ def main():
     plt.ylabel("Normiertes ESC Eingangssignal")
     plt.legend()
     d = numpy.array([t_path_dist, path_dist, dist_target, thrust], dtype=float)
-    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Pfaddistanz", "Zieldistanz", "ESC"])
+    out = pd.DataFrame(numpy.transpose(d),
+                       columns=["Zeit", "Pfaddistanz", "Zieldistanz", "ESC"])
     out.to_csv("control_switch_off.csv")
 
     plt.figure()
