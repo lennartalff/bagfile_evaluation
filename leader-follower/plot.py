@@ -95,6 +95,16 @@ def main():
     plt.ylabel("Abstand [m]")
     plt.legend()
     plt.xlim(0, tspan)
+    dx = numpy.array([t_rssi_dbm, rssi_dbm], dtype=float)
+    out = pd.DataFrame(numpy.transpose(dx), columns=["Zeit", "Signalstärke"])
+    out.to_csv("rssi_distance_rssi.csv", sep=",")
+    dx = numpy.array([t_a, d], dtype=float)
+    out = pd.DataFrame(numpy.transpose(dx), columns=["Zeit", "Abstand"])
+    out.to_csv("rssi_distance_distance.csv", sep=",")
+
+    # plt.figure()
+    # d = be.resample(d, t_a, t_rssi_dbm)
+    # plt.scatter(d, rssi_dbm)
 
     plt.figure()
     rf2to3 = e.extract_rxdata("/uuv03/multi_uuv_rssi_02")
