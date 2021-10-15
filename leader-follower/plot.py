@@ -104,6 +104,12 @@ def main():
     plt.ylabel("Anteil verlorener Nachrichten")
     plt.xlabel("Zeit [s]")
     plt.legend()
+    d = numpy.array([rf2to3.t_drop_rate, rf2to3.drop_rate])
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Verlustrate"])
+    out.to_csv("drop_rate_a.csv", sep=",")
+    d = numpy.array([rf3to2.t_drop_rate, rf3to2.drop_rate])
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Verlustrate"])
+    out.to_csv("drop_rate_b.csv", sep=",")
 
     plt.figure()
     # xy Plot der Fahrzeuge -> gut wiederholbar, aber verzerrt
@@ -189,6 +195,16 @@ def main():
     plt.xlabel("Zeit [s]")
     plt.grid(True)
     plt.legend()
+    a2b_rate, a2b_time = be.crop_data(rate2to3.rate, rate2to3.time, 0, 200)
+    r_t = numpy.ones_like(a2b_rate) * RATE_MAX
+    d = numpy.array([a2b_time, a2b_rate, r_t])
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Rate", "Maximum"])
+    out.to_csv("a2b_rate.csv", sep=",")
+    b2a_rate, b2a_time = be.crop_data(rate3to2.rate, rate3to2.time, 0, 200)
+    r_t = numpy.ones_like(b2a_rate) * RATE_MAX
+    d = numpy.array([b2a_time, b2a_rate, r_t])
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Rate", "Maximum"])
+    out.to_csv("b2a_rate.csv", sep=",")
 
     plt.subplot(2, 2, 3)
     N = 10
@@ -211,6 +227,21 @@ def main():
     plt.xlabel("Zeit [s]")
     plt.grid(True)
     plt.legend()
+    s2, t2 = be.crop_data(s2, t2, 0, 200)
+    n2, _ = be.crop_data(n2, t2, 0, 200)
+    s3, t3 = be.crop_data(s3, t3, 0, 200)
+    n3, _ = be.crop_data(n3, t3, 0, 200)
+    s2, n2 = be.limit_to_shorter(s2, n2)
+    t2, s2 = be.limit_to_shorter(t2, s2)
+    s3, n3 = be.limit_to_shorter(s3, n3)
+    t3, s3 = be.limit_to_shorter(t3, s3)
+    d = numpy.array([t2, s2, n2], dtype=float)
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Signalstärke", "Rauschen"])
+    out.to_csv("rssi_noise_a.csv", sep=",")
+    d = numpy.array([t3, s3, n3])
+    out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Signalstärke", "Rauschen"])
+    out.to_csv("rssi_noise_b.csv", sep=",")
+    
 
     plt.show()
 
