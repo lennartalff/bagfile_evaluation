@@ -14,7 +14,7 @@ BAGFILE = os.path.join(BASE_DIR, SUB_DIR, FILE_NAME)
 
 CMAP = matplotlib.cm.get_cmap("tab10")
 
-RATE_MAX = 7.72
+RATE_MAX = 7.46
 
 
 def main():
@@ -104,10 +104,12 @@ def main():
     plt.ylabel("Anteil verlorener Nachrichten")
     plt.xlabel("Zeit [s]")
     plt.legend()
-    d = numpy.array([rf2to3.t_drop_rate, rf2to3.drop_rate])
+    drop_a2b, t_a2b = be.crop_data(rf2to3.drop_rate, rf2to3.t_drop_rate, 0, 200)
+    drop_b2a, t_b2a = be.crop_data(rf3to2.drop_rate, rf3to2.t_drop_rate, 0, 200)
+    d = numpy.array([t_a2b, drop_a2b])
     out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Verlustrate"])
     out.to_csv("drop_rate_a.csv", sep=",")
-    d = numpy.array([rf3to2.t_drop_rate, rf3to2.drop_rate])
+    d = numpy.array([t_b2a, drop_b2a])
     out = pd.DataFrame(numpy.transpose(d), columns=["Zeit", "Verlustrate"])
     out.to_csv("drop_rate_b.csv", sep=",")
 
