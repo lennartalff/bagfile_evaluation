@@ -1,9 +1,11 @@
+from numpy.lib.arraysetops import isin
 import rosbag
 import matplotlib.pyplot as plt
 import numpy
 import tf.transformations
 import collections
 import pandas
+from nav_msgs.msg import Odometry
 
 PoseData = collections.namedtuple("PoseData",
                                   ["position", "orientation", "time"])
@@ -43,9 +45,14 @@ class Evaluator(object):
         q = numpy.zeros([n, 4], float)
         t = numpy.zeros([n], float)
         for i, (_, msg, ros_time) in enumerate(msg_list):
-            rot = msg.pose.orientation
+            if msg._type == "nav_msgs/Odometry":
+                rot = msg.pose.pose.orientation
+                pos = msg.pose.pose.position
+            else:
+                rot = msg.pose.orientation
+                pos = msg.pose.position
             p[i, :] = [
-                msg.pose.position.x, msg.pose.position.y, msg.pose.position.z
+                pos.x, pos.y, pos.z
             ]
             q[i, :] = [rot.x, rot.y, rot.z, rot.w]
             t[i] = ros_time.to_sec() - t0
